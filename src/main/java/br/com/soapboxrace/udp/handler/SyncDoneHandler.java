@@ -13,7 +13,7 @@ public class SyncDoneHandler extends PacketHandler {
 	@Override
 	public void handlePacket(byte[] packet, long timeDiff) {
 		byte[] transformByteTypeASync22 = SoapBoxPacketProcessor.transformByteTypeASync22(packet, timeDiff);
-		sendPacket(transformByteTypeASync22);
+//		sendPacket(transformByteTypeASync22);
 	}
 
 }

@@ -13,7 +13,7 @@ public class KeepAliveHandler extends PacketHandler {
 	@Override
 	public void handlePacket(byte[] packet, long timeDiff) {
 		byte[] transformByteTypeA = SoapBoxPacketProcessor.transformByteTypeA(packet, timeDiff);
-		sendPacket(transformByteTypeA);
+//		sendPacket(transformByteTypeA);
 	}
 
 }

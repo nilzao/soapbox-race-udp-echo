@@ -13,6 +13,12 @@ public class PacketDetector {
 				return PacketType.KEEP_ALIVE;
 			}
 		}
+		if (isFreeRoamHello(dataPacket)) {
+			return PacketType.FREEROAM_HELLO;
+		}
+		if (isFreeRoamB(dataPacket)) {
+			return PacketType.FREEROAM_B;
+		}
 		if (isIdBeforeSync(dataPacket)) {
 			return PacketType.ID_BEFORE_SYNC;
 		}
@@ -36,6 +42,20 @@ public class PacketDetector {
 
 	private static boolean isIdAfterSync(byte[] dataPacket) {
 		if (isTypeBHeader(dataPacket) && dataPacket[10] == (byte) 0x02) {
+			return true;
+		}
+		return false;
+	}
+
+	private static boolean isFreeRoamHello(byte[] dataPacket) {
+		if (dataPacket[2] == 0x07 && dataPacket[3] == 0x01) {
+			return true;
+		}
+		return false;
+	}
+
+	private static boolean isFreeRoamB(byte[] dataPacket) {
+		if (dataPacket[2] == 0x07 && dataPacket[3] == 0x02) {
 			return true;
 		}
 		return false;

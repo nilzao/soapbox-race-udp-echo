@@ -11,6 +11,7 @@ public enum PacketType {
 	ID_AFTER_SYNC, // 0x02
 	POSTITION_AFTER_SYNC, // 0x12
 	TYPE_10, //
-	TYPE_11;
-
+	TYPE_11, //
+	FREEROAM_HELLO, //
+	FREEROAM_B;
 }

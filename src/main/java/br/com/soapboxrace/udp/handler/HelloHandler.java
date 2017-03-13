@@ -9,6 +9,8 @@ import br.com.soapboxrace.udp.srv.UdpSender;
 
 public class HelloHandler extends PacketHandler {
 
+	private boolean sent = false;
+
 	public HelloHandler(UdpSender udpSender) {
 		super(udpSender);
 	}
@@ -20,7 +22,10 @@ public class HelloHandler extends PacketHandler {
 		sendData[4] = timeArray[0];
 		sendData[5] = timeArray[1];
 		parsePacketTimeA(packet);
-		sendPacket(sendData);
+		if (!sent) {
+			sendPacket(sendData);
+			sent = true;
+		}
 	}
 
 	private void parsePacketTimeA(byte[] packet) {

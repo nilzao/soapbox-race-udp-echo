@@ -15,9 +15,9 @@ public class IdBeforeSyncHandler extends PacketHandler {
 	@Override
 	public void handlePacket(byte[] packet, long timeDiff) {
 		byte[] transformByteTypeBInit = SoapBoxPacketProcessor.transformByteTypeBInit(packet);
-		sendPacket(transformByteTypeBInit);
+//		sendPacket(transformByteTypeBInit);
 		HelloSyncHandler helloSyncHandler = (HelloSyncHandler) UdpListener.getPacketHandler(PacketType.HELLO_SYNC);
-		helloSyncHandler.reSendPacket();
+//		helloSyncHandler.reSendPacket();
 	}
 
 }

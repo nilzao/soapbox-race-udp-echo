@@ -4,6 +4,8 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.HashMap;
 
+import br.com.soapboxrace.udp.handler.FreeRoamBHandler;
+import br.com.soapboxrace.udp.handler.FreeRoamHandler;
 import br.com.soapboxrace.udp.handler.HelloHandler;
 import br.com.soapboxrace.udp.handler.HelloSyncHandler;
 import br.com.soapboxrace.udp.handler.IdAfterSyncHandler;
@@ -46,8 +48,8 @@ public class UdpListener extends Thread {
 				}
 				byte[] bytes = getBytes(receivePacket);
 				PacketType detect = PacketDetector.detect(bytes);
-				// System.out.println("incomming packet type: [" + detect.toString() + "] time: [" + getTimeDiff() + "ms]");
-				System.out.println("in  " + UdpDebug.byteArrayToHexString(bytes));
+				System.out.println("incomming packet type: [" + detect.toString() + "] time: [" + getTimeDiff() + "ms]");
+				System.out.println("in:  " + UdpDebug.byteArrayToHexString(bytes));
 				PacketHandler packetHandler = getPacketHandler(detect);
 				packetHandler.handlePacket(bytes, getTimeDiff());
 				receivePacket = new DatagramPacket(receiveData, receiveData.length);
@@ -90,6 +92,12 @@ public class UdpListener extends Thread {
 				break;
 			case TYPE_11:
 				packetHandler = new Type11Handler(udpSender);
+				break;
+			case FREEROAM_HELLO:
+				packetHandler = new FreeRoamHandler(udpSender);
+				break;
+			case FREEROAM_B:
+				packetHandler = new FreeRoamBHandler(udpSender);
 				break;
 			default:
 				break;

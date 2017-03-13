@@ -17,13 +17,13 @@ public class HelloSyncHandler extends PacketHandler {
 	public void handlePacket(byte[] packet, long timeDiff) {
 		byte[] transformByteTypeA = SoapBoxPacketProcessor.transformByteTypeASync(packet, timeDiff);
 		this.helloSync = packet;
-		sendPacket(transformByteTypeA);
+//		sendPacket(transformByteTypeA);
 	}
 
 	public void reSendPacket() {
 		long timeDiff = UdpListener.getTimeDiff();
 		byte[] transformByteTypeA = SoapBoxPacketProcessor.transformByteTypeASync(helloSync, timeDiff);
-		sendPacket(transformByteTypeA);
+//		sendPacket(transformByteTypeA);
 	}
 
 }

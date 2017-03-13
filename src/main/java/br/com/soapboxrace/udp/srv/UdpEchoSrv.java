@@ -17,7 +17,7 @@ public class UdpEchoSrv {
 	}
 
 	public static void main(String[] args) {
-		int port = 9998;
+		int port = 9999;
 		UdpEchoSrv estudos = new UdpEchoSrv();
 		estudos.start(port);
 	}
