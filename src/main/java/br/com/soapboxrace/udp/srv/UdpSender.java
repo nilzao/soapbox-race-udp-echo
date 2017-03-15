@@ -18,7 +18,6 @@ public class UdpSender {
 	public void sendData(byte[] sendData) {
 		try {
 			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
-			System.out.println("out: " + UdpDebug.byteArrayToHexString(sendData));
 			serverSocket.send(sendPacket);
 		} catch (Exception e) {
 			e.printStackTrace();
