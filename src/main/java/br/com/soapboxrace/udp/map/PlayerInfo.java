@@ -28,8 +28,6 @@ public class PlayerInfo {
 	}
 
 	private void splitPacket(byte[] parsedPacket) {
-		System.out.println(UdpDebug.byteArrayToHexString(parsedPacket));
-		System.out.println("SPLIT!");
 		int packetType = 0;
 		int packetSize = 0;
 		int pos = 0;
