@@ -13,14 +13,11 @@ import br.com.soapboxrace.udp.srv.UdpSender;
 
 public class FreeRoamHandler extends PacketHandler {
 
-	private PlayerInfo playerInfo;
-
 	private static int countA = 1;
 	private static int countB = 1;
 	PlayerPackets playerPackets;
 	private boolean handShakeOk = false;
 	private static final int LIMIT = 2048; // 490
-	private int playerInfoSendCount = 0;
 
 	public FreeRoamHandler(UdpSender udpSender) {
 		super(udpSender);
