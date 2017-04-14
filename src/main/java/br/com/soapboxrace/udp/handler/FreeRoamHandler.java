@@ -18,6 +18,9 @@ public class FreeRoamHandler extends PacketHandler {
 	private static int countA = 1;
 	private static int countB = 1;
 	PlayerPackets playerPackets;
+	private boolean handShakeOk = false;
+	private static final int LIMIT = 2048; // 490
+	private int playerInfoSendCount = 0;
 
 	public FreeRoamHandler(UdpSender udpSender) {
 		super(udpSender);
@@ -55,36 +58,77 @@ public class FreeRoamHandler extends PacketHandler {
 
 	@Override
 	public void handlePacket(byte[] packet) {
-		byte[] bufferToSend = bufferToSend(packet);
-		sendFullPacket(bufferToSend);
-		countB++;
+		if (!handShakeOk) {
+			sendPlayersInfo(packet);
+		} else {
+			sendPlayersStatePos();
+		}
 	}
 
-	private byte[] bufferToSend(byte[] packet) {
-		// int limit = 490;
-		int limit = 2048;
-		ByteBuffer byteBuffer = ByteBuffer.allocate(limit);
+	private void sendFirstPlayer() {
+		ByteBuffer byteBuffer = ByteBuffer.allocate(LIMIT);
 		int size = 0;
-		byte[] playerPacket = null;
 		List<PlayerInfo> playersInside = playerPackets.getPlayersInside();
-		for (PlayerInfo playerInfoTmp : playersInside) {
-			if (playerInfo == null) {
-				playerPacket = playerInfoTmp.getPlayerPacket();
-				System.out.println("static player =================================================");
-				System.out.println(UdpDebug.byteArrayToHexString(packet));
-				System.out.println("===============================================================");
-			} else {
-				playerPacket = playerInfoTmp.getStatePosPacket();
+		PlayerInfo playerInfoTmp = playersInside.get(0);
+		byte[] playerPacket = playerInfoTmp.getPlayerPacket();
+		size = size + playerPacket.length + 2;
+		byteBuffer.put((byte) 0x00);
+		byteBuffer.put(playerPacket);
+		byteBuffer.put((byte) 0xff);
+		for (int i = 0; i < playersInside.size(); i++) {
+			byteBuffer.put((byte) 0xff);
+			byteBuffer.put((byte) 0xff);
+			size = size + 2;
+		}
+		byte[] byteTmpReturn = new byte[size];
+		System.arraycopy(byteBuffer.array(), 0, byteTmpReturn, 0, byteTmpReturn.length);
+		sendFullPacket(byteTmpReturn);
+	}
+
+	private void sendPlayersInfo(byte[] packet) {
+		sendFirstPlayer();
+		List<PlayerInfo> playersInside = playerPackets.getPlayersInside();
+		for (int i = 1; i < playersInside.size(); i++) {
+			ByteBuffer byteBuffer = ByteBuffer.allocate(LIMIT);
+			int size = 0;
+			for (int i2 = 0; i2 < i; i2++) {
+				byteBuffer.put((byte) 0x00);
+				byteBuffer.put((byte) 0xff);
+				size = size + 2;
 			}
+			PlayerInfo playerInfoTmp = playersInside.get(i);
+			byte[] playerPacket = playerInfoTmp.getPlayerPacket();
+			size = size + playerPacket.length + 2;
+			byteBuffer.put((byte) 0x00);
+			byteBuffer.put(playerPacket);
+			byteBuffer.put((byte) 0xff);
+			byte[] byteTmpReturn = new byte[size];
+			System.arraycopy(byteBuffer.array(), 0, byteTmpReturn, 0, byteTmpReturn.length);
+			sendFullPacket(byteTmpReturn);
+		}
+		countB++;
+		handShakeOk = true;
+		System.out.println("bytes to copy ==============================================");
+		System.out.println(UdpDebug.byteArrayToHexString(packet));
+		System.out.println("============================================================");
+	}
+
+	private void sendPlayersStatePos() {
+		ByteBuffer byteBuffer = ByteBuffer.allocate(LIMIT);
+		int size = 0;
+		List<PlayerInfo> playersInside = playerPackets.getPlayersInside();
+		for (int i = 0; i < playersInside.size(); i++) {
+			PlayerInfo playerInfoTmp = playersInside.get(i);
+			byte[] playerPacket = playerInfoTmp.getStatePosPacket();
 			size = size + playerPacket.length + 2;
 			byteBuffer.put((byte) 0x00);
 			byteBuffer.put(playerPacket);
 			byteBuffer.put((byte) 0xff);
 		}
-		playerInfo = new PlayerInfo(packet);
 		byte[] byteTmpReturn = new byte[size];
 		System.arraycopy(byteBuffer.array(), 0, byteTmpReturn, 0, byteTmpReturn.length);
-		return byteTmpReturn;
+		sendFullPacket(byteTmpReturn);
+		countB++;
 	}
 
 	private void sendFullPacket(byte[] packet) {
@@ -95,6 +139,7 @@ public class FreeRoamHandler extends PacketHandler {
 		allocate.put(packet);
 		allocate.put(crc);
 		byte[] byteArray = allocate.array();
+		// System.out.println("size: [" + byteArray.length + "]");
 		// System.out.println(UdpDebug.byteArrayToHexString(byteArray));
 		sendPacket(byteArray);
 	}
