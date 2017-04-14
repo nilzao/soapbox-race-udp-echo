@@ -14,6 +14,7 @@ public class FreeRoamHandler extends PacketHandler {
 	private PlayerInfo playerInfo;
 
 	private static int countA = 1;
+	private static int countB = 1;
 
 	public FreeRoamHandler(UdpSender udpSender) {
 		super(udpSender);
@@ -22,6 +23,7 @@ public class FreeRoamHandler extends PacketHandler {
 	// 00:02:02:6a:b0:56:7a:00:02:bf:ff:01:
 	private byte[] header() {
 		byte[] seqArray = ByteBuffer.allocate(2).putShort((short) countA).array();
+		byte[] seqArray2 = ByteBuffer.allocate(2).putShort((short) countB).array();
 		countA++;
 		byte[] timeDiffBytes = getDiffTimeBytes();
 		HelloHandler helloHandler = (HelloHandler) UdpListener.getPacketHandler(PacketType.HELLO);
@@ -31,7 +33,7 @@ public class FreeRoamHandler extends PacketHandler {
 				(byte) 0x02, // fixo
 				timeDiffBytes[0], timeDiffBytes[1], // time
 				helloCliTime[0], helloCliTime[1], //
-				seqArray[0], seqArray[1], // counter?? (with counter, need to start at same time, cli like it and stop sending id packets)
+				seqArray2[0], seqArray2[1], // counter?? (with counter, need to start at same time, cli like it and stop sending id packets)
 				// (byte) 0xff, (byte) 0xff, // counter?? (without counter, can start any time, cli dont like it and keep sending id packets, need sync time
 				// bytes
 				// on 12:1a packets)
@@ -49,7 +51,8 @@ public class FreeRoamHandler extends PacketHandler {
 
 	@Override
 	public void handlePacket(byte[] packet) {
-		byte[] emptyPacket = null;
+		ByteBuffer byteBuffer1 = null;
+		ByteBuffer byteBuffer2 = null;
 		if (playerInfo == null) {
 			long timeDiff = UdpListener.getTimeDiff() - 20L;
 			byte[] timeDiffBytes = ByteBuffer.allocate(2).putShort((short) timeDiff).array();
@@ -76,21 +79,25 @@ public class FreeRoamHandler extends PacketHandler {
 			botPacket3[2] = timeDiffBytes[0];
 			botPacket3[3] = timeDiffBytes[1];
 
-			int packetSize = ghostPacket1.length + ghostPacket2.length + ghostPacket3.length + botPacket1.length + botPacket2.length + botPacket3.length + 4;
-			ByteBuffer byteBuffer = ByteBuffer.allocate(packetSize);
+			int packetSize1 = ghostPacket1.length + ghostPacket2.length + ghostPacket3.length + 2;
+			byteBuffer1 = ByteBuffer.allocate(packetSize1);
 
-			byteBuffer.put((byte) 0x00);
-			byteBuffer.put(ghostPacket1);
-			byteBuffer.put(ghostPacket2);
-			byteBuffer.put(ghostPacket3);
-			byteBuffer.put((byte) 0xff);
-			byteBuffer.put((byte) 0x00);
-			byteBuffer.put(botPacket1);
-			byteBuffer.put(botPacket2);
-			byteBuffer.put(botPacket3);
-			byteBuffer.put((byte) 0xff);
+			byteBuffer1.put((byte) 0x00);
+			byteBuffer1.put(ghostPacket1);
+			byteBuffer1.put(ghostPacket2);
+			byteBuffer1.put(ghostPacket3);
+			byteBuffer1.put((byte) 0xff);
 
-			emptyPacket = byteBuffer.array();
+			int packetSize2 = botPacket1.length + botPacket2.length + botPacket3.length + 4;
+			byteBuffer2 = ByteBuffer.allocate(packetSize2);
+			byteBuffer2.put((byte) 0x00);
+			byteBuffer2.put((byte) 0xff);
+			byteBuffer2.put((byte) 0x00);
+			byteBuffer2.put(botPacket1);
+			byteBuffer2.put(botPacket2);
+			byteBuffer2.put(botPacket3);
+			byteBuffer2.put((byte) 0xff);
+
 			playerInfo = new PlayerInfo(packet);
 		} else {
 			// String ghostPacketStr = "12:1a:00:33:98:03:71:cd:28:db:f2:f3:88:4b:13:88:3f:6b:f8:1f:ef:2d:2d:2d:34:50:00:7f:";
@@ -106,25 +113,36 @@ public class FreeRoamHandler extends PacketHandler {
 			botPacket[2] = timeDiffBytes[0];
 			botPacket[3] = timeDiffBytes[1];
 
-			ByteBuffer byteBuffer = ByteBuffer.allocate(ghostPacket.length + botPacket.length + 4);
-			byteBuffer.put((byte) 0x00);
-			byteBuffer.put(ghostPacket);
-			byteBuffer.put((byte) 0xff);
-			byteBuffer.put((byte) 0x00);
-			byteBuffer.put(botPacket);
-			byteBuffer.put((byte) 0xff);
+			byteBuffer1 = ByteBuffer.allocate(ghostPacket.length + 2);
+			byteBuffer1.put((byte) 0x00);
+			byteBuffer1.put(ghostPacket);
+			byteBuffer1.put((byte) 0xff);
 
-			emptyPacket = byteBuffer.array();
+			byteBuffer2 = ByteBuffer.allocate(botPacket.length + 4);
+			byteBuffer2.put((byte) 0x00);
+			byteBuffer2.put((byte) 0xff);
+			byteBuffer2.put((byte) 0x00);
+			byteBuffer2.put(botPacket);
+			byteBuffer2.put((byte) 0xff);
 
 			playerInfo.parseInputData(packet);
 		}
-		// byte[] playerPacket = playerInfo.getPlayerPacket();
-		// System.out.println(UdpDebug.byteArrayToHexString(playerPacket));
+		byte[] bytebufferArray1 = byteBuffer1.array();
+		byte[] bytebufferArray2 = byteBuffer2.array();
+		ByteBuffer bytebufferFinal = ByteBuffer.allocate(bytebufferArray1.length + bytebufferArray2.length);
+		bytebufferFinal.put(bytebufferArray1);
+		bytebufferFinal.put(bytebufferArray2);
+		sendFullPacket(bytebufferArray1);
+		sendFullPacket(bytebufferArray2);
+		countB++;
+	}
+
+	private void sendFullPacket(byte[] packet) {
 		byte[] header = header();
 		byte[] crc = crc();
-		ByteBuffer allocate = ByteBuffer.allocate(header.length + emptyPacket.length + crc.length);
+		ByteBuffer allocate = ByteBuffer.allocate(header.length + packet.length + crc.length);
 		allocate.put(header);
-		allocate.put(emptyPacket);
+		allocate.put(packet);
 		allocate.put(crc);
 		byte[] byteArray = allocate.array();
 		// System.out.println(UdpDebug.byteArrayToHexString(byteArray));

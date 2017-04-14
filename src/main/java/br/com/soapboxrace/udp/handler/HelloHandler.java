@@ -1,10 +1,6 @@
 package br.com.soapboxrace.udp.handler;
 
-import java.nio.ByteBuffer;
-
 import br.com.soapboxrace.udp.srv.PacketHandler;
-import br.com.soapboxrace.udp.srv.UdpDebug;
-import br.com.soapboxrace.udp.srv.UdpListener;
 import br.com.soapboxrace.udp.srv.UdpSender;
 
 public class HelloHandler extends PacketHandler {
