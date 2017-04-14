@@ -39,7 +39,7 @@ public class UdpListener extends Thread {
 				byte[] bytes = getBytes(receivePacket);
 				PacketType detect = PacketDetector.detectType(bytes);
 				// System.out.println("incomming packet type: [" + detect.toString() + "] time: [" + getTimeDiff() + "ms]");
-				System.out.println("in: " + UdpDebug.byteArrayToHexString(bytes));
+				// System.out.println("in: " + UdpDebug.byteArrayToHexString(bytes));
 				PacketHandler packetHandler = getPacketHandler(detect);
 				packetHandler.handlePacket(bytes);
 				receivePacket = new DatagramPacket(receiveData, receiveData.length);

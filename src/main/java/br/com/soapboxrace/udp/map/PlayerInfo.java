@@ -2,6 +2,8 @@ package br.com.soapboxrace.udp.map;
 
 import java.nio.ByteBuffer;
 
+import br.com.soapboxrace.udp.srv.UdpListener;
+
 public class PlayerInfo {
 
 	private byte[] channel;
@@ -55,7 +57,8 @@ public class PlayerInfo {
 	}
 
 	public byte[] getPlayerPacket() {
-		int bufferSize = channel.length + id.length + statePos.length + 6;
+		byte[] statePosPacket = getStatePosPacket();
+		int bufferSize = channel.length + id.length + statePosPacket.length + 4;
 		ByteBuffer byteBuffer = ByteBuffer.allocate(bufferSize);
 		byteBuffer.put((byte) 0x00);
 		byteBuffer.put((byte) channel.length);
@@ -65,9 +68,21 @@ public class PlayerInfo {
 		byteBuffer.put((byte) id.length);
 		byteBuffer.put(id);
 
+		byteBuffer.put(statePosPacket);
+		return byteBuffer.array();
+	}
+
+	public byte[] getStatePosPacket() {
+		byte[] clone = statePos.clone();
+		long timeDiff = UdpListener.getTimeDiff() - 20L;
+		byte[] timeDiffBytes = ByteBuffer.allocate(2).putShort((short) timeDiff).array();
+		clone[0] = timeDiffBytes[0];
+		clone[1] = timeDiffBytes[1];
+		int bufferSize = clone.length + 2;
+		ByteBuffer byteBuffer = ByteBuffer.allocate(bufferSize);
 		byteBuffer.put((byte) 0x12);
-		byteBuffer.put((byte) statePos.length);
-		byteBuffer.put(statePos);
+		byteBuffer.put((byte) clone.length);
+		byteBuffer.put(clone);
 		return byteBuffer.array();
 	}
 

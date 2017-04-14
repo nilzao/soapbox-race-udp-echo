@@ -1,8 +1,10 @@
 package br.com.soapboxrace.udp.handler;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 
 import br.com.soapboxrace.udp.map.PlayerInfo;
+import br.com.soapboxrace.udp.map.PlayerPackets;
 import br.com.soapboxrace.udp.srv.PacketHandler;
 import br.com.soapboxrace.udp.srv.PacketType;
 import br.com.soapboxrace.udp.srv.UdpDebug;
@@ -15,9 +17,11 @@ public class FreeRoamHandler extends PacketHandler {
 
 	private static int countA = 1;
 	private static int countB = 1;
+	PlayerPackets playerPackets;
 
 	public FreeRoamHandler(UdpSender udpSender) {
 		super(udpSender);
+		playerPackets = new PlayerPackets();
 	}
 
 	// 00:02:02:6a:b0:56:7a:00:02:bf:ff:01:
@@ -51,90 +55,36 @@ public class FreeRoamHandler extends PacketHandler {
 
 	@Override
 	public void handlePacket(byte[] packet) {
-		ByteBuffer byteBuffer1 = null;
-		ByteBuffer byteBuffer2 = null;
-		if (playerInfo == null) {
-			long timeDiff = UdpListener.getTimeDiff() - 20L;
-			byte[] timeDiffBytes = ByteBuffer.allocate(2).putShort((short) timeDiff).array();
-
-			String[] ghostPackets = new String[3];
-			ghostPackets[0] = "00:22:00:00:63:68:61:6e:6e:65:6c:2e:45:4e:5f:5f:31:00:00:01:67:c3:7b:d0:fc:33:00:63:ef:76:00:00:00:00:00:d0:";
-			ghostPackets[1] = "01:41:00:47:48:4f:53:54:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:c7:8a:a9:00:00:00:00:00:c8:00:00:00:00:00:00:00:b0:79:e6:cf:ee:1e:9c:fb:72:67:90:a3:00:00:00:00:";
-			// ghostPackets[2] = "12:1a:00:33:98:03:71:cd:28:db:f2:f3:88:4b:13:88:3f:6b:f8:1f:ef:2d:2d:2d:34:50:00:7f:";
-			ghostPackets[2] = "12:1a:00:84:98:0f:1b:01:c2:30:f7:89:c4:25:89:c4:20:38:2b:fb:e3:96:96:96:9a:28:00:3f:";
-
-			byte[] ghostPacket1 = UdpDebug.hexStringToByteArray(ghostPackets[0]);
-			byte[] ghostPacket2 = UdpDebug.hexStringToByteArray(ghostPackets[1]);
-			byte[] ghostPacket3 = UdpDebug.hexStringToByteArray(ghostPackets[2]);
-			ghostPacket3[2] = timeDiffBytes[0];
-			ghostPacket3[3] = timeDiffBytes[1];
-
-			String[] botPackets = new String[3];
-			botPackets[0] = "00:22:00:00:63:68:61:6e:6e:65:6c:2e:45:4e:5f:5f:31:00:00:01:67:c3:7b:d0:fc:33:00:63:ef:76:00:00:00:00:00:90:";
-			botPackets[1] = "01:41:00:42:4f:54:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:c7:8a:a9:00:00:00:00:00:2c:01:00:00:00:00:00:00:b0:79:e6:cf:ee:1e:9c:fb:bd:0b:d7:a2:00:00:00:00:";
-			botPackets[2] = "12:1a:00:31:98:0f:19:3d:c2:70:f7:d9:c4:25:89:c4:20:38:5b:fb:e0:96:96:96:9a:28:00:3f:";
-			byte[] botPacket1 = UdpDebug.hexStringToByteArray(botPackets[0]);
-			byte[] botPacket2 = UdpDebug.hexStringToByteArray(botPackets[1]);
-			byte[] botPacket3 = UdpDebug.hexStringToByteArray(botPackets[2]);
-			botPacket3[2] = timeDiffBytes[0];
-			botPacket3[3] = timeDiffBytes[1];
-
-			int packetSize1 = ghostPacket1.length + ghostPacket2.length + ghostPacket3.length + 2;
-			byteBuffer1 = ByteBuffer.allocate(packetSize1);
-
-			byteBuffer1.put((byte) 0x00);
-			byteBuffer1.put(ghostPacket1);
-			byteBuffer1.put(ghostPacket2);
-			byteBuffer1.put(ghostPacket3);
-			byteBuffer1.put((byte) 0xff);
-
-			int packetSize2 = botPacket1.length + botPacket2.length + botPacket3.length + 4;
-			byteBuffer2 = ByteBuffer.allocate(packetSize2);
-			byteBuffer2.put((byte) 0x00);
-			byteBuffer2.put((byte) 0xff);
-			byteBuffer2.put((byte) 0x00);
-			byteBuffer2.put(botPacket1);
-			byteBuffer2.put(botPacket2);
-			byteBuffer2.put(botPacket3);
-			byteBuffer2.put((byte) 0xff);
-
-			playerInfo = new PlayerInfo(packet);
-		} else {
-			// String ghostPacketStr = "12:1a:00:33:98:03:71:cd:28:db:f2:f3:88:4b:13:88:3f:6b:f8:1f:ef:2d:2d:2d:34:50:00:7f:";
-			String ghostPacketStr = "12:1a:00:84:98:0f:1b:01:c2:30:f7:89:c4:25:89:c4:20:38:2b:fb:e3:96:96:96:9a:28:00:3f:";
-			byte[] ghostPacket = UdpDebug.hexStringToByteArray(ghostPacketStr);
-			String botPacketStr = "12:1a:00:31:98:0f:19:3d:c2:70:f7:d9:c4:25:89:c4:20:38:5b:fb:e0:96:96:96:9a:28:00:3f";
-			byte[] botPacket = UdpDebug.hexStringToByteArray(botPacketStr);
-
-			long timeDiff = UdpListener.getTimeDiff() - 20L;
-			byte[] timeDiffBytes = ByteBuffer.allocate(2).putShort((short) timeDiff).array();
-			ghostPacket[2] = timeDiffBytes[0];
-			ghostPacket[3] = timeDiffBytes[1];
-			botPacket[2] = timeDiffBytes[0];
-			botPacket[3] = timeDiffBytes[1];
-
-			byteBuffer1 = ByteBuffer.allocate(ghostPacket.length + 2);
-			byteBuffer1.put((byte) 0x00);
-			byteBuffer1.put(ghostPacket);
-			byteBuffer1.put((byte) 0xff);
-
-			byteBuffer2 = ByteBuffer.allocate(botPacket.length + 4);
-			byteBuffer2.put((byte) 0x00);
-			byteBuffer2.put((byte) 0xff);
-			byteBuffer2.put((byte) 0x00);
-			byteBuffer2.put(botPacket);
-			byteBuffer2.put((byte) 0xff);
-
-			playerInfo.parseInputData(packet);
-		}
-		byte[] bytebufferArray1 = byteBuffer1.array();
-		byte[] bytebufferArray2 = byteBuffer2.array();
-		ByteBuffer bytebufferFinal = ByteBuffer.allocate(bytebufferArray1.length + bytebufferArray2.length);
-		bytebufferFinal.put(bytebufferArray1);
-		bytebufferFinal.put(bytebufferArray2);
-		sendFullPacket(bytebufferArray1);
-		sendFullPacket(bytebufferArray2);
+		byte[] bufferToSend = bufferToSend(packet);
+		sendFullPacket(bufferToSend);
 		countB++;
+	}
+
+	private byte[] bufferToSend(byte[] packet) {
+		// int limit = 490;
+		int limit = 2048;
+		ByteBuffer byteBuffer = ByteBuffer.allocate(limit);
+		int size = 0;
+		byte[] playerPacket = null;
+		List<PlayerInfo> playersInside = playerPackets.getPlayersInside();
+		for (PlayerInfo playerInfoTmp : playersInside) {
+			if (playerInfo == null) {
+				playerPacket = playerInfoTmp.getPlayerPacket();
+				System.out.println("static player =================================================");
+				System.out.println(UdpDebug.byteArrayToHexString(packet));
+				System.out.println("===============================================================");
+			} else {
+				playerPacket = playerInfoTmp.getStatePosPacket();
+			}
+			size = size + playerPacket.length + 2;
+			byteBuffer.put((byte) 0x00);
+			byteBuffer.put(playerPacket);
+			byteBuffer.put((byte) 0xff);
+		}
+		playerInfo = new PlayerInfo(packet);
+		byte[] byteTmpReturn = new byte[size];
+		System.arraycopy(byteBuffer.array(), 0, byteTmpReturn, 0, byteTmpReturn.length);
+		return byteTmpReturn;
 	}
 
 	private void sendFullPacket(byte[] packet) {
