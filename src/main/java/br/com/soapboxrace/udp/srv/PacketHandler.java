@@ -1,5 +1,7 @@
 package br.com.soapboxrace.udp.srv;
 
+import java.nio.ByteBuffer;
+
 public abstract class PacketHandler {
 
 	private UdpSender udpSender;
@@ -13,6 +15,11 @@ public abstract class PacketHandler {
 		udpSender.sendData(packet);
 	}
 
-	public abstract void handlePacket(byte[] packet, long timeDiff);
+	public byte[] getDiffTimeBytes() {
+		long timeDiff = UdpListener.getTimeDiff();
+		return ByteBuffer.allocate(2).putShort((short) timeDiff).array();
+	}
+
+	public abstract void handlePacket(byte[] packet);
 
 }

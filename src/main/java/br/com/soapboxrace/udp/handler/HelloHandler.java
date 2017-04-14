@@ -9,28 +9,29 @@ import br.com.soapboxrace.udp.srv.UdpSender;
 
 public class HelloHandler extends PacketHandler {
 
-	private boolean sent = false;
+	private byte[] cliTime;
 
 	public HelloHandler(UdpSender udpSender) {
 		super(udpSender);
 	}
 
 	@Override
-	public void handlePacket(byte[] packet, long timeDiff) {
-		byte[] sendData = UdpDebug.hexStringToByteArray("00:00:00:01:99:99:66:66:01:01:01:01");
-		byte[] timeArray = ByteBuffer.allocate(2).putShort((short) timeDiff).array();
-		sendData[4] = timeArray[0];
-		sendData[5] = timeArray[1];
-		parsePacketTimeA(packet);
-		if (!sent) {
-			sendPacket(sendData);
-			sent = true;
-		}
+	public void handlePacket(byte[] packet) {
+		cliTime = new byte[] { packet[52], packet[53] };
+		System.out.println("HELLOOOOOOOO!!");
+		byte[] timeArray = getDiffTimeBytes();
+		byte[] helloPacket = { //
+				(byte) 0x00, (byte) 0x00, // seq
+				(byte) 0x01, // hello header
+				timeArray[0], timeArray[1], // time
+				cliTime[0], cliTime[1], // cli time?
+				(byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01 // crc
+		};
+		sendPacket(helloPacket);
 	}
 
-	private void parsePacketTimeA(byte[] packet) {
-		byte[] timeA = new byte[] { packet[(packet.length - 6)], packet[(packet.length - 5)] };
-		UdpListener.helloTime = timeA.clone();
+	public byte[] getCliTime() {
+		return cliTime;
 	}
 
 }

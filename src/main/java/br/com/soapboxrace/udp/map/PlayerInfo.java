@@ -2,8 +2,6 @@ package br.com.soapboxrace.udp.map;
 
 import java.nio.ByteBuffer;
 
-import br.com.soapboxrace.udp.srv.UdpDebug;
-
 public class PlayerInfo {
 
 	private byte[] channel;
@@ -57,7 +55,7 @@ public class PlayerInfo {
 	}
 
 	public byte[] getPlayerPacket() {
-		int bufferSize = channel.length + id.length + statePos.length + 7;
+		int bufferSize = channel.length + id.length + statePos.length + 6;
 		ByteBuffer byteBuffer = ByteBuffer.allocate(bufferSize);
 		byteBuffer.put((byte) 0x00);
 		byteBuffer.put((byte) channel.length);
@@ -70,7 +68,6 @@ public class PlayerInfo {
 		byteBuffer.put((byte) 0x12);
 		byteBuffer.put((byte) statePos.length);
 		byteBuffer.put(statePos);
-		byteBuffer.put((byte) 0xff);
 		return byteBuffer.array();
 	}
 

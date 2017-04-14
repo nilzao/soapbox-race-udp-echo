@@ -14,6 +14,33 @@ public class SoapBoxPacketProcessor {
 		timeLong = System.currentTimeMillis();
 	}
 
+	private byte[] header() {
+		byte[] seqArray = ByteBuffer.allocate(2).putShort((short) countA).array();
+		countA++;
+		byte[] timeDiffBytes = getTimeDiffBytes();
+		// SoapBoxTalk soapBoxTalk = (SoapBoxTalk) getUdpTalk();
+		// HelloHandler helloHandler = (HelloHandler) soapBoxTalk.getPacketHandler(PacketHandleType.HELLO);
+		// byte[] helloCliTime = helloHandler.getCliTime();
+		byte[] header = new byte[] { //
+				seqArray[0], seqArray[1], // seq
+				(byte) 0x02, // fixo
+				timeDiffBytes[0], timeDiffBytes[1], // time
+				// helloCliTime[0], helloCliTime[1], //
+				// seqArray[0], seqArray[1], // counter?? (with counter, need to start at same time, cli like it and stop sending id packets)
+				(byte) 0xff, (byte) 0x01, // counter?? (without counter, can start any time, cli dont like it and keep sending id packets, need sync time bytes
+				// on 12:1a packets)
+				(byte) 0xff, //
+				(byte) 0xff, //
+				(byte) 0x00//
+		};
+		return header;
+	}
+
+	private byte[] getTimeDiffBytes() {
+		long timeDiff = UdpListener.getTimeDiff();
+		return null;
+	}
+
 	public static byte[] getProcessed(byte[] data, byte sessionFromClientIdx) {
 		SoapBoxPacketProcessor.sessionFromClientIdx = sessionFromClientIdx;
 		if (isTypeB(data)) {

@@ -1,6 +1,6 @@
 package br.com.soapboxrace.udp.srv;
 
-public enum PacketType {
+public enum PacketHandleType {
 
 	HELLO, FREEROAM;
 
