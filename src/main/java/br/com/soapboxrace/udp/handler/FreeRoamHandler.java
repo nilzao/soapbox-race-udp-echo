@@ -66,12 +66,7 @@ public class FreeRoamHandler extends PacketHandler {
 		System.out.println(UdpDebug.byteArrayToHexString(packet));
 		byte[] nextLine = playerRecording.getNextLine();
 		if (nextLine != null) {
-			// System.out.println(UdpDebug.byteArrayToHexString(nextLine));
-			ByteBuffer allocate = ByteBuffer.allocate(nextLine.length + 2);
-			allocate.put((byte) 0x00);
-			allocate.put(nextLine);
-			allocate.put((byte) 0xff);
-			sendFullPacket(allocate.array());
+			sendFullPacket(nextLine);
 			countB++;
 		}
 	}
