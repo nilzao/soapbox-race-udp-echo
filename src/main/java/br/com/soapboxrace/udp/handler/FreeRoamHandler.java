@@ -5,6 +5,7 @@ import java.util.List;
 
 import br.com.soapboxrace.udp.map.PlayerInfo;
 import br.com.soapboxrace.udp.map.PlayerPackets;
+import br.com.soapboxrace.udp.map.PlayerRecording;
 import br.com.soapboxrace.udp.srv.PacketHandler;
 import br.com.soapboxrace.udp.srv.PacketType;
 import br.com.soapboxrace.udp.srv.UdpDebug;
@@ -15,13 +16,15 @@ public class FreeRoamHandler extends PacketHandler {
 
 	private static int countA = 1;
 	private static int countB = 1;
-	PlayerPackets playerPackets;
+	private PlayerPackets playerPackets;
+	private PlayerRecording playerRecording;
 	private boolean handShakeOk = false;
 	private static final int LIMIT = 2048; // 490
 
 	public FreeRoamHandler(UdpSender udpSender) {
 		super(udpSender);
 		playerPackets = new PlayerPackets();
+		playerRecording = new PlayerRecording();
 	}
 
 	// 00:02:02:6a:b0:56:7a:00:02:bf:ff:01:
@@ -55,9 +58,29 @@ public class FreeRoamHandler extends PacketHandler {
 
 	@Override
 	public void handlePacket(byte[] packet) {
+		staticPlayers(packet);
+		// recordedPlayers(packet);
+	}
+
+	private void recordedPlayers(byte[] packet) {
+		System.out.println(UdpDebug.byteArrayToHexString(packet));
+		byte[] nextLine = playerRecording.getNextLine();
+		if (nextLine != null) {
+			// System.out.println(UdpDebug.byteArrayToHexString(nextLine));
+			ByteBuffer allocate = ByteBuffer.allocate(nextLine.length + 2);
+			allocate.put((byte) 0x00);
+			allocate.put(nextLine);
+			allocate.put((byte) 0xff);
+			sendFullPacket(allocate.array());
+			countB++;
+		}
+	}
+
+	private void staticPlayers(byte[] packet) {
 		if (!handShakeOk) {
 			sendPlayersInfo(packet);
 		} else {
+			// System.out.println(UdpDebug.byteArrayToHexString(packet));
 			sendPlayersStatePos();
 		}
 	}
@@ -105,9 +128,9 @@ public class FreeRoamHandler extends PacketHandler {
 		}
 		countB++;
 		handShakeOk = true;
-		System.out.println("bytes to copy ==============================================");
+		// System.out.println("bytes to copy ==============================================");
 		System.out.println(UdpDebug.byteArrayToHexString(packet));
-		System.out.println("============================================================");
+		// System.out.println("============================================================");
 	}
 
 	private void sendPlayersStatePos() {
